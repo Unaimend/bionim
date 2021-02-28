@@ -6,5 +6,5 @@ Currently implemented alogrithms and data structures
 # Alignment
 Algorithms and data structures usefull in the alignment of genomic and protein based sequences
  ## Algorithms
- * [Needleman-Wunsch](https://en.wikipedia.org/wiki/Needleman-Wunsch_algorithm "Wikipedia page of the Needleman-Wunsch algorithm")
+ * [Needleman-Wunsch](https://en.wikipedia.org/wiki/Needleman-Wunsch_algorithm "Wikipedia page of the Needleman-Wunsch algorithm") Basic algorithms used for global and local sequence alignment
  
