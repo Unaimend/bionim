@@ -51,7 +51,6 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, gap
   var alignA: string
   var alignB: string
   while x > 0 or y > 0:
-    echo x, y
     var current = grid[y][x]
     #find out if there was a match or an indel in sequence1 or an indel in sequence2
     let s = if sequence1[x-1] == sequence2[y-1]: match else: indel_penal
