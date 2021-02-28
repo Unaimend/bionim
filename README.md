@@ -7,6 +7,9 @@ Currently implemented alogrithms and data structures
 Algorithms and data structures usefull in the alignment of genomic and protein based sequences
  ## Algorithms
  * [Needleman-Wunsch](https://en.wikipedia.org/wiki/Needleman-Wunsch_algorithm "Wikipedia page of the Needleman-Wunsch algorithm") Basic algorithm used for global and local sequence alignment
+
+# Tests
+To run test just run `nimble test` in the bionim directory
  
 # Contributions
 If you want to contribute or think that a specific algorithm or data structure should be included in this package just create an issue.
