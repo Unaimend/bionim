@@ -7,11 +7,11 @@ type Matrix* = ref seq[seq[int]]
 type NeedlemanWunschConfig* = ref object
   sequence1*: string
   sequence2*: string
-  match*: int8
-  gap_penal*: int8
   indel_penal*: int8
+  match*: int8
+  mismatch*: int8
 
-proc needlemanWunsch*(sequence1: string, sequence2: string, gap_penal: int8, match: int8, indel_penal: int8): Matrix =
+proc needlemanWunsch*(sequence1: string, sequence2: string, indel_penal: int8, match: int8, mismatch: int8): Matrix =
   let seq1_len = sequence1.len+1
   let seq2_len = sequence2.len+1
 
@@ -23,16 +23,16 @@ proc needlemanWunsch*(sequence1: string, sequence2: string, gap_penal: int8, mat
     #Add sequences of length sequence1 for each character of sequence2
     grid[y] = newSeq[int](seq1_len)
     #initilize the 0 colum
-    grid[y][0] = gap_penal*y
+    grid[y][0] = indel_penal*y
     for x in 0 ..< seq1_len:
       if y==0:
         #initialize the 0 row
-        grid[y][x] = gap_penal*x
+        grid[y][x] = indel_penal*x
       elif x > 0 and y > 0:
         #calculate score values
-        let s = if sequence1[x-1] == sequence2[y-1]: match else: indel_penal
-        grid[y][x] = max(grid[y][x-1] + gap_penal, 
-                     max(grid[y-1][x] + gap_penal, 
+        let s = if sequence1[x-1] == sequence2[y-1]: match else:mismatch 
+        grid[y][x] = max(grid[y][x-1] + indel_penal, 
+                     max(grid[y-1][x] + indel_penal, 
                          grid[y-1][x-1]+s))
 
   when DEBUG:
@@ -41,10 +41,10 @@ proc needlemanWunsch*(sequence1: string, sequence2: string, gap_penal: int8, mat
   result = grid
 
 proc needlemanWunsch*(options: NeedlemanWunschConfig): Matrix=
-  needlemanWunsch(options.sequence1, options.sequence2, options.gap_penal, options.match, options.indel_penal)
+  needlemanWunsch(options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch)
 
 
-proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, gap_penal: int8, match: int8, indel_penal: int8): (string, string) = 
+proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, indel_penal: int8, match: int8, mismatch: int8): (string, string) = 
   var x = sequence1.len
   var y = sequence2.len
 
@@ -53,7 +53,7 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, gap
   while x > 0 or y > 0:
     var current = grid[y][x]
     #find out if there was a match or an indel in sequence1 or an indel in sequence2
-    let s = if sequence1[x-1] == sequence2[y-1]: match else: indel_penal
+    let s = if sequence1[x-1] == sequence2[y-1]: match else: mismatch
     #Check if we can still go to the upper left, and if we came from the upperleft
     if x > 0 and y > 0 and current == grid[y-1][x-1] + s:
       #Match
@@ -61,11 +61,11 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, gap
       alignB.add(sequence2[y-1])
       x = x - 1 
       y = y - 1
-    elif y > 0 and current == grid[y-1][x] + gap_penal:
+    elif y > 0 and current == grid[y-1][x] + indel_penal:
       alignA.add("-")
       alignB.add(sequence2[y-1])
       y = y - 1
-    elif x > 0 and current == grid[y][x-1] + gap_penal:
+    elif x > 0 and current == grid[y][x-1] + indel_penal:
       alignA.add(sequence1[x-1])
       alignB.add("-")
       x = x - 1
@@ -74,7 +74,7 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, gap
   result = (alignA, alignB)
 
 proc calculateAlignment*(grid: Matrix, options: NeedlemanWunschConfig) : (string, string) =
-  calculateAlignment(grid, options.sequence1, options.sequence2, options.gap_penal, options.match, options.indel_penal) 
+  calculateAlignment(grid, options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch) 
 
 proc printGrid*(grid: Matrix, sequence1: string, sequence2: string): void = 
   stdout.write "    -"
