@@ -12,7 +12,7 @@ proc needlemanWunschMain() =
       let gap_penal: int8 = -1
       let match: int8 = 1
 
-      let grid = needlemanWunschGlobal(seq1, seq2, gap_penal, match, indel_penal)
+      let grid = needlemanWunsch(seq1, seq2, gap_penal, match, indel_penal)
     test "Build grid":
       var test: Matrix 
       new(test)

@@ -11,7 +11,7 @@ type NeedlemanWunschConfig* = ref object
   gap_penal*: int8
   indel_penal*: int8
 
-proc needlemanWunschGlobal*(sequence1: string, sequence2: string, gap_penal: int8, match: int8, indel_penal: int8): Matrix =
+proc needlemanWunsch*(sequence1: string, sequence2: string, gap_penal: int8, match: int8, indel_penal: int8): Matrix =
   let seq1_len = sequence1.len+1
   let seq2_len = sequence2.len+1
 
@@ -40,8 +40,8 @@ proc needlemanWunschGlobal*(sequence1: string, sequence2: string, gap_penal: int
     echo "Length of second sequence ", seq2_len, " Length of second array index ", grid[0].len
   result = grid
 
-proc needlemanWunschGlobal*(options: NeedlemanWunschConfig): Matrix=
-  needlemanWunschGlobal(options.sequence1, options.sequence2, options.gap_penal, options.match, options.indel_penal)
+proc needlemanWunsch*(options: NeedlemanWunschConfig): Matrix=
+  needlemanWunsch(options.sequence1, options.sequence2, options.gap_penal, options.match, options.indel_penal)
 
 
 proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, gap_penal: int8, match: int8, indel_penal: int8): (string, string) = 
@@ -92,7 +92,7 @@ proc printGrid*(grid: Matrix, sequence1: string, sequence2: string): void =
     echo ""
 
 when isMainModule:
-  let a = needlemanWunschGlobal("WHAT", "WHY", -1, 1, -1)
+  let a = needlemanWunsch("WHAT", "WHY", -1, 1, -1)
   let b = calculateAlignment(a, "WHAT", "WHY", -1,1,-1)
   echo b[0]
   echo b[1]
