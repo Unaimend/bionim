@@ -7,7 +7,6 @@ license       = "MIT"
 srcDir        = "src"
 binDir        = "bin"
 installExt    = @["nim"]
-bin           = @["main"]
 
 
 # Dependencies
