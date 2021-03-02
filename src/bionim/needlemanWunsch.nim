@@ -92,8 +92,8 @@ proc printGrid*(grid: Matrix, sequence1: string, sequence2: string): void =
     echo ""
 
 when isMainModule:
-  let a = needlemanWunsch("WHAT", "WHY", -1, 1, -1)
-  let b = calculateAlignment(a, "WHAT", "WHY", -1,1,-1)
+  let a = needlemanWunsch("GCATGCU", "GATTACA", -1, 1, -1)
+  let b = calculateAlignment(a, "GCATGCU", "GATTACA", -1,1,-1)
   echo b[0]
   echo b[1]
 

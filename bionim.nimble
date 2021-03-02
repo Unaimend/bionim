@@ -7,9 +7,8 @@ license       = "MIT"
 srcDir        = "src"
 binDir        = "bin"
 installExt    = @["nim"]
-bin           = @["main"]
 
 
 # Dependencies
 
-requires "nim >= 1.4.4" 
+requires "nim >= 1.4.4", "phylogeni"
