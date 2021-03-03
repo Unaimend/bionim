@@ -1,18 +1,27 @@
-import strformat
+##Module description
+
 import algorithm
 import utils
 const DEBUG = true
-
+## Type alias for working with 2D-Matrix
+#TODO Should probably renamed to Matrix2D
 type Matrix* = ref seq[seq[int]]
 
 type NeedlemanWunschConfig* = ref object
+  ## Type which reprensents all need information for the Needleman-Wunsch algorithm
   sequence1*: string
+    ## First sequence used in the alignment
   sequence2*: string
+    ## Second sequence used in the alignment
   indel_penal*: int8
+    ## The penaltie which for insertions and deletions
   match*: int8
+    ## The reward when a match happens
   mismatch*: int8
+    ## The penaltie for a mismatch
 
 proc needlemanWunsch*(sequence1: string, sequence2: string, indel_penal: int8, match: int8, mismatch: int8): Matrix =
+  ## This procedure build and returns the 2D-Arrays used in the algorithm. 
   let seq1_len = sequence1.len+1
   let seq2_len = sequence2.len+1
 
@@ -42,10 +51,11 @@ proc needlemanWunsch*(sequence1: string, sequence2: string, indel_penal: int8, m
   result = grid
 
 proc needlemanWunsch*(options: NeedlemanWunschConfig): Matrix=
+  # Helper function for use with the NeedlemanWunschConfig type
   needlemanWunsch(options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch)
 
 
-proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, indel_penal: int8, match: int8, mismatch: int8): (string, string) = 
+proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, indel_penal: int8, match: int8, mismatch: int8): (string, string) = ## Calculates the actual allignment, returs a Tuple of (string, string) in which t[0] represents the first aligned sequence and t[1] the second aligned sequence.
   var x = sequence1.len
   var y = sequence2.len
 
@@ -75,22 +85,8 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
   result = (alignA, alignB)
 
 proc calculateAlignment*(grid: Matrix, options: NeedlemanWunschConfig) : (string, string) =
+  # Helper function for use with the NeedlemanWunschConfig type
   calculateAlignment(grid, options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch) 
-
-proc printGrid*(grid: Matrix, sequence1: string, sequence2: string): void = 
-  stdout.write "    -"
-  for i in sequence1:
-    let s: string = $i
-    #TODO Make this not static
-    stdout.write fmt"{s:>4}"
-  echo ""
-  let altSeq = "-" & sequence2
-  for i in 0 ..< grid[].len:
-    stdout.write altSeq[i]
-    for j in 0 ..< grid[i].len:
-      let s: string = $grid[i][j]
-      stdout.write fmt"{s:>4}"
-    echo ""
 
 when isMainModule:
   let a = needlemanWunsch("GCATGCU", "GATTACA", -1, 1, -1)
@@ -98,4 +94,4 @@ when isMainModule:
   echo b[0]
   echo b[1]
 
-  printGrid(a, "WHAT", "WHY")
+  printGrid(a, "GCATGCU", "GATTACA")
