@@ -64,14 +64,15 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
   while x > 0 or y > 0:
     var current = grid[y][x]
     #find out if there was a match or an indel in sequence1 or an indel in sequence2
-    let s = if sequence1[x-1] == sequence2[y-1]: match else: mismatch
     #Check if we can still go to the upper left, and if we came from the upperleft
-    if x > 0 and y > 0 and current == grid[y-1][x-1] + s:
-      #Match
-      alignA.add(sequence1[x-1])
-      alignB.add(sequence2[y-1])
-      x = x - 1 
-      y = y - 1
+    if x > 0 and y > 0:
+      let s = if sequence1[x-1] == sequence2[y-1]: match else: mismatch
+      if current == grid[y-1][x-1] + s:
+        #Match
+        alignA.add(sequence1[x-1])
+        alignB.add(sequence2[y-1])
+        x = x - 1 
+        y = y - 1
     elif y > 0 and current == grid[y-1][x] + indel_penal:
       alignA.add("-")
       alignB.add(sequence2[y-1])
@@ -89,9 +90,9 @@ proc calculateAlignment*(grid: Matrix, options: NeedlemanWunschConfig) : (string
   calculateAlignment(grid, options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch) 
 
 when isMainModule:
-  let a = needlemanWunsch("GCATGCU", "GATTACA", -1, 1, -1)
-  let b = calculateAlignment(a, "GCATGCU", "GATTACA", -1,1,-1)
+  let a = needlemanWunsch("A", "GATTACA", -1, 1, -1)
+  printGrid(a, "A", "GATTACA")
+  let b = calculateAlignment(a, "A", "GATTACA", -1,1,-1)
   echo b[0]
   echo b[1]
 
-  printGrid(a, "GCATGCU", "GATTACA")
