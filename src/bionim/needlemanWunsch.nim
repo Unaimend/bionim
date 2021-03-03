@@ -5,7 +5,6 @@ import utils
 const DEBUG = true
 ## Type alias for working with 2D-Matrix
 #TODO Should probably renamed to Matrix2D
-type Matrix* = ref seq[seq[int]]
 
 type NeedlemanWunschConfig* = ref object
   ## Type which reprensents all need information for the Needleman-Wunsch algorithm
@@ -61,13 +60,15 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
 
   var alignA: string
   var alignB: string
+  #TODO Add comment why i do this weird stuff
+  proc lazy(): int8 =
+    if sequence1[x-1] == sequence2[y-1]: match else: mismatch
+     
   while x > 0 or y > 0:
     var current = grid[y][x]
     #find out if there was a match or an indel in sequence1 or an indel in sequence2
     #Check if we can still go to the upper left, and if we came from the upperleft
-    if x > 0 and y > 0:
-      let s = if sequence1[x-1] == sequence2[y-1]: match else: mismatch
-      if current == grid[y-1][x-1] + s:
+    if x > 0 and y > 0 and current == grid[y-1][x-1] + lazy():
         #Match
         alignA.add(sequence1[x-1])
         alignB.add(sequence2[y-1])
@@ -81,6 +82,9 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
       alignA.add(sequence1[x-1])
       alignB.add("-")
       x = x - 1
+    else:
+      echo "THIS SHOULD NEVER HAPPEN"
+  #Since we got those sequences by backtracking we have to reverse them
   alignA.reverse
   alignB.reverse
   result = (alignA, alignB)
@@ -90,9 +94,9 @@ proc calculateAlignment*(grid: Matrix, options: NeedlemanWunschConfig) : (string
   calculateAlignment(grid, options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch) 
 
 when isMainModule:
-  let a = needlemanWunsch("A", "GATTACA", -1, 1, -1)
-  printGrid(a, "A", "GATTACA")
-  let b = calculateAlignment(a, "A", "GATTACA", -1,1,-1)
+  let a = needlemanWunsch("G", "WHY", -1, 1, -1)
+  printGrid(a, "G", "WHY")
+  let b = calculateAlignment(a, "G", "WHY", -1,1,-1)
   echo b[0]
   echo b[1]
 
