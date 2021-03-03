@@ -2,7 +2,7 @@
 
 This package tries to provide a lot of the most useful data structures and alogrithms need in the different subfield of bio informatics
 
-The apis for most of the algorithms we be quite unstable until version 1.0.0 is reached, also this package will grrow quite a lot in the next few months
+The apis for most of the algorithms will be quite unstable until version 1.0.0 is reached, also this package will grrow quite a lot in the next few months
 Currently implemented alogrithms and data structures
 # Alignment
 Algorithms and data structures usefull in the alignment of genomic and protein based sequences
