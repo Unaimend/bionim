@@ -60,7 +60,6 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
 
   var alignA: string
   var alignB: string
-  #TODO Add comment why i do this weird stuff
   proc lazy(): int8 =
     if sequence1[x-1] == sequence2[y-1]: match else: mismatch
      
@@ -75,15 +74,17 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
         x = x - 1 
         y = y - 1
     elif y > 0 and current == grid[y-1][x] + indel_penal:
+      #Indel in sequence1
       alignA.add("-")
       alignB.add(sequence2[y-1])
       y = y - 1
     elif x > 0 and current == grid[y][x-1] + indel_penal:
+      #Indel in sequence2
       alignA.add(sequence1[x-1])
       alignB.add("-")
       x = x - 1
     else:
-      echo "THIS SHOULD NEVER HAPPEN"
+      raise newException(OSError, "This should not happen")
   #Since we got those sequences by backtracking we have to reverse them
   alignA.reverse
   alignB.reverse
