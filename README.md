@@ -1,3 +1,4 @@
+[![test](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml/badge.svg?branch=main)](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml)
 
 This package tries to provide a lot of the most useful data structures and alogrithms need in the different subfields of bioinformatics
 
