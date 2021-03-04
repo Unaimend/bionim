@@ -2,7 +2,7 @@
 
 import algorithm
 import utils
-const DEBUG = true
+const DEBUG = false
 ## Type alias for working with 2D-Matrix
 #TODO Should probably renamed to Matrix2D
 
@@ -94,9 +94,9 @@ proc calculateAlignment*(grid: Matrix, options: NeedlemanWunschConfig) : (string
   calculateAlignment(grid, options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch) 
 
 when isMainModule:
-  let a = needlemanWunsch("G", "WHY", -1, 1, -1)
-  printGrid(a, "G", "WHY")
-  let b = calculateAlignment(a, "G", "WHY", -1,1,-1)
+  let a = needlemanWunsch("WHY", "", -1, 1, -1)
+  printGrid(a, "WHY", "")
+  let b = calculateAlignment(a, "WHY", "", -1,1,-1)
   echo b[0]
   echo b[1]
 
