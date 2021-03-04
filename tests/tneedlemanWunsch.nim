@@ -78,6 +78,9 @@ proc needlemanWunschMain() =
       test[0] = @[0, -1, -2, -3 ]
       check(grid[] == test[])
 
+      #TODO Add more alignment tests
+      #Test the NeedlemanWunschOptions type
+
 needlemanWunschMain()
 
 
