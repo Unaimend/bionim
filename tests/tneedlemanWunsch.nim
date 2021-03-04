@@ -24,7 +24,7 @@ proc needlemanWunschMain() =
       check(grid[] == test[])
     
 
-    test "Align normale":
+    test "Align":
       let alignment = calculateAlignment(grid, seq1, seq2, indel_penal, match, mismatch)
       check(alignment[0] == "WHAT")
       check(alignment[1] == "WH-Y")
@@ -42,6 +42,41 @@ proc needlemanWunschMain() =
       test[3] = @[-3, -1]
       check(grid[] == test[])
 
+
+    test "Build grid second single":
+      seq1 = "WHY"
+      seq2 = "W"
+      grid = needlemanWunsch(seq1, seq2, indel_penal, match, mismatch)
+      var test: Matrix 
+      new(test)
+      test[] = newSeq[seq[int]](seq2.len+1)
+      test[0] = @[0, -1, -2, -3]
+      test[1] = @[-1, 1, 0, -1]
+      check(grid[] == test[])
+
+    test "Build grid first empty":
+      seq1 = ""
+      seq2 = "WHY"
+      grid = needlemanWunsch(seq1, seq2, indel_penal, match, mismatch)
+      var test: Matrix 
+      new(test)
+      test[] = newSeq[seq[int]](seq2.len+1)
+      test[0] = @[0 ]
+      test[1] = @[-1]
+      test[2] = @[-2]
+      test[3] = @[-3 ]
+      check(grid[] == test[])
+
+
+    test "Build grid second empty":
+      seq1 = "WHY"
+      seq2 = ""
+      grid = needlemanWunsch(seq1, seq2, indel_penal, match, mismatch)
+      var test: Matrix 
+      new(test)
+      test[] = newSeq[seq[int]](seq2.len+1)
+      test[0] = @[0, -1, -2, -3 ]
+      check(grid[] == test[])
 
 needlemanWunschMain()
 
