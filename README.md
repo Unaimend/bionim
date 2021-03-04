@@ -1,8 +1,9 @@
 [![test](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml/badge.svg?branch=main)](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml)
 
-This package tries to provide a lot of the most useful data structures and alogrithms need in the different subfield of bio informatics
+This package tries to provide a lot of the most useful data structures and alogrithms need in the different subfields of bioinformatics
 
-The apis for most of the algorithms will be quite unstable until version 1.0.0 is reached, also this package will grrow quite a lot in the next few months
+The apis for most of the algorithms we be quite unstable until version 1.0.0 is reached, also this package will grrow quite a lot in the next few months
+
 Currently implemented alogrithms and data structures
 # Alignment
 Algorithms and data structures usefull in the alignment of genomic and protein based sequences
