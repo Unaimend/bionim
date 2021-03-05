@@ -10,7 +10,7 @@ Requires Nim to be installed on your system. See https://nim-lang.org/
 
 Installation with the nimble package manager is recommended:
 
-nimble install bionim 
+`nimble install bionim`
 
 
 # Tests
