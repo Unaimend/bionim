@@ -1,16 +1,23 @@
+## Implements the Smiah-Waterman algorithm used for local alignment
 import utils
-const DEBUG = true
-
-type Matrix* = ref seq[seq[int]]
+#TODO Find a way to do this better
+const DEBUG = false
 
 type SmithWatermanConfig* = ref object
+  ## Type which reprensents all need information for the Smith-Waterman algorithm
   sequence1*: string
+    ## First sequence used in the alignment
   sequence2*: string
+    ## Second sequence used in the alignment
   indel_penal*: int8
+    ## The penaltie which for insertions and deletions aka a gap
   match*: int8
-  gap_penal*: int8
+    ## The reward when a match happens
+  mismatch*: int8
+    ## The penaltie for a mismatch
 
-proc smithWaterman*(sequence1: string, sequence2: string, gap_penal: int8, match: int8, mismatch: int8 ): Matrix =
+proc smithWaterman*(sequence1: string, sequence2: string, indel_penal: int8, match: int8, mismatch: int8 ): Matrix =
+  ## This procedure builds and returns the 2D-Arrays used in the later steps of the algorithm. 
   let seq1_len = sequence1.len+1
   let seq2_len = sequence2.len+1
 
@@ -29,17 +36,15 @@ proc smithWaterman*(sequence1: string, sequence2: string, gap_penal: int8, match
         grid[y][x] = 0
       elif x > 0 and y > 0:
         #calculate score values
-        echo "TEST"
         let s = if sequence1[x-1] == sequence2[y-1]: match else: mismatch
-        grid[y][x] = max(grid[y][x-1] + gap_penal, 
-                        max(grid[y-1][x] + gap_penal, 
+        grid[y][x] = max(grid[y][x-1] + indel_penal, 
+                        max(grid[y-1][x] + indel_penal, 
                          max(grid[y-1][x-1]+s, 0)))
-                         
-
-  when DEBUG:
-    echo "Length of first sequence ", seq1_len, " Length of first array index ", grid[].len
-    echo "Length of second sequence ", seq2_len, " Length of second array index ", grid[0].len
   result = grid
+
+proc smithWaterman(options: SmithWatermanConfig): Matrix=
+  smithWaterman(options.sequence1, options.sequence2, options.indel_penal, options.match, options.mismatch)
+
 
 
 

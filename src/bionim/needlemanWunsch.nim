@@ -1,7 +1,7 @@
-##Module description
-
+## Implements the Needleman-Wunsch algorithm used for global alignment
 import algorithm
 import utils
+#TODO Find a way to do this better
 const DEBUG = false
 ## Type alias for working with 2D-Matrix
 #TODO Should probably renamed to Matrix2D
@@ -13,14 +13,14 @@ type NeedlemanWunschConfig* = ref object
   sequence2*: string
     ## Second sequence used in the alignment
   indel_penal*: int8
-    ## The penaltie which for insertions and deletions
+    ## The penaltie which for insertions and deletions aka a gap
   match*: int8
     ## The reward when a match happens
   mismatch*: int8
     ## The penaltie for a mismatch
 
 proc needlemanWunsch*(sequence1: string, sequence2: string, indel_penal: int8, match: int8, mismatch: int8): Matrix =
-  ## This procedure build and returns the 2D-Arrays used in the algorithm. 
+  ## This procedure builds and returns the 2D-Arrays used in the later steps of the algorithm. 
   let seq1_len = sequence1.len+1
   let seq2_len = sequence2.len+1
 
@@ -60,7 +60,6 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
 
   var alignA: string
   var alignB: string
-  #TODO Add comment why i do this weird stuff
   proc lazy(): int8 =
     if sequence1[x-1] == sequence2[y-1]: match else: mismatch
      
@@ -75,15 +74,17 @@ proc calculateAlignment*(grid: Matrix, sequence1: string, sequence2: string, ind
         x = x - 1 
         y = y - 1
     elif y > 0 and current == grid[y-1][x] + indel_penal:
+      #Indel in sequence1
       alignA.add("-")
       alignB.add(sequence2[y-1])
       y = y - 1
     elif x > 0 and current == grid[y][x-1] + indel_penal:
+      #Indel in sequence2
       alignA.add(sequence1[x-1])
       alignB.add("-")
       x = x - 1
     else:
-      echo "THIS SHOULD NEVER HAPPEN"
+      raise newException(OSError, "This should not happen")
   #Since we got those sequences by backtracking we have to reverse them
   alignA.reverse
   alignB.reverse
