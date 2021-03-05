@@ -1,8 +1,22 @@
+# Bionim
 [![test](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml/badge.svg?branch=main)](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml)
 
 This package tries to provide a lot of the most useful data structures and alogrithms need in the different subfields of bioinformatics
 
 The apis for most of the algorithms we be quite unstable until version 1.0.0 is reached, also this package will grrow quite a lot in the next few months
+
+# Instalation
+Requires Nim to be installed on your system. See https://nim-lang.org/
+
+Installation with the nimble package manager is recommended:
+
+nimble install bionim 
+
+
+# Tests
+To run test just run `nimble test` in the bionim directory
+
+
 
 Currently implemented alogrithms and data structures
 # Alignment
@@ -11,8 +25,6 @@ Algorithms and data structures usefull in the alignment of genomic and protein b
  * [Needleman-Wunsch](https://en.wikipedia.org/wiki/Needleman-Wunsch_algorithm "Wikipedia page of the Needleman-Wunsch algorithm") Basic algorithm used for global alignment
  * [Smith-Waterman](https://en.wikipedia.org/wiki/Smith-Waterman_algorithm) Basic algorithm used for local alignment
 
-# Tests
-To run test just run `nimble test` in the bionim directory
 
 # Credits
 In this section are all packages listed on which bionim depends and which are not maintained by me
