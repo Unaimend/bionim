@@ -11,4 +11,4 @@ installExt    = @["nim"]
 
 # Dependencies
 
-requires "nim >= 1.4.4", "phylogeni"
+requires "nim >= 1.4.4", "phylogeni >= 0.0.2"
