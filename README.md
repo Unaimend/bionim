@@ -20,10 +20,13 @@ To run test just run `nimble test` in the bionim directory
 
 Currently implemented alogrithms and data structures
 # Alignment
-Algorithms and data structures usefull in the alignment of genomic and protein based sequences
+Algorithms and data structures usefull in the alignment of genomic and protein based sequences.
  ## Algorithms
  * [Needleman-Wunsch](https://en.wikipedia.org/wiki/Needleman-Wunsch_algorithm "Wikipedia page of the Needleman-Wunsch algorithm") Basic algorithm used for global alignment
- * [Smith-Waterman](https://en.wikipedia.org/wiki/Smith-Waterman_algorithm) Basic algorithm used for local alignment
+ * [Smith-Waterman](https://en.wikipedia.org/wiki/Smith-Waterman_algorithm) Basic algorithm used for local alignment.
+
+# Phylogenetics
+ * Fitch Algorithms for constructing phylogenetic trees from aligned sequences.
 
 
 # Credits
