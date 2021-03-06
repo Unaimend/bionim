@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.0"
+version       = "0.0.3"
 author        = "Thomas Dost"
 description   = "A collection of useful algorithms and data structures for bioinformatics"
 license       = "MIT"
