@@ -26,11 +26,13 @@ Algorithms and data structures usefull in the alignment of genomic and protein b
  * [Smith-Waterman](https://en.wikipedia.org/wiki/Smith-Waterman_algorithm) Basic algorithm used for local alignment.
 
 # Phylogenetics
- * Fitch Algorithms for constructing phylogenetic trees from aligned sequences.
+ * Fitch's algorithm for constructing phylogenetic trees from aligned sequences.
 
+# Assembly
+ * DeBruijn Graph building
 
 # Credits
-In this section are all packages listed on which bionim depends and which are not maintained by me
+In this section are all packages listed on which bionim depends and which were not created by me.
  * [PhylogeNi](https://github.com/kerrycobb/PhylogeNi) A library for working with phylogenetic trees
  
 # Contributions
@@ -43,4 +45,4 @@ Also I am always happy if someone suggest code improvements and stuff like that.
  * Calculation of all possible optimal alignment for Needleman-Wunsch
  * Usage of similiarity matrices in Needleman-Wunsch
      * Customizable gap penalties for Needleman-Wunsch
- 
+## Minimum skew problem
