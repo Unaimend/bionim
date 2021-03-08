@@ -5,7 +5,7 @@ import bionim/utils
 import tables
 
 
-proc `==`(v1: seq[string],v2: seq[StrView]): bool =
+func `==`(v1: seq[string],v2: seq[StrView]): bool =
   if v1.len != v2.len:
     return false
   #Check content 
@@ -30,7 +30,6 @@ proc testDebruijn()=
       sView = s.toStrView(0, 2)
       check sView.len == s[0..2].len
 
-
       sView = s.toStrView(0, 1)
       check sView.len == s[0..1].len
 
@@ -46,13 +45,30 @@ proc testDebruijn()=
     test "DeBruijn init":
       var g: DeBruijnGraph = build("ACTGTC", 3)
       check g.source == "ACTGTC"
+      
       var s = "ACTGTC"
       var kmers: seq[string] = @[]
       for k in s.kmers(3):
         kmers.add(k)  
       check kmers == g.kmers
-      
-        
 
+      check kmers[0] == "ACT"
+      check kmers[1] == "CTG"
+      check kmers[2] == "TGT"
+      check kmers[3] == "GTC"
+
+      check g.kMerMap[]
+
+      check g.edgesOut.len == 4
+      check g.edgesOut[0] == @[1'i64]
+      check g.edgesOut[1] == @[2'i64]
+      check g.edgesOut[2] == @[3'i64]
+      check g.edgesOut[3] == newSeq[int64]()
+
+      check g.edgesIn.len == 4
+      check g.edgesIn[0] == newSeq[int64]()
+      check g.edgesIn[1] == @[0'i64]
+      check g.edgesIn[2] == @[1'i64]
+      check g.edgesIn[3] == @[2'i64]
 
 testDeBruijn()
