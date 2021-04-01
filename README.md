@@ -1,7 +1,7 @@
 # Bionim
 [![test](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml/badge.svg?branch=main)](https://github.com/Unaimend/bionim/actions/workflows/main_test.yml)
 
-This package tries to provide a lot of the most useful data structures and algorithms need in the different subfields of bioinformatics
+This package tries to provide a lot of the most useful data structures and algorithms needed in the different subfields of bioinformatics
 
 The apis for most of the algorithms we be quite unstable until version 1.0.0 is reached, also this package will grrow quite a lot in the next few months
 
