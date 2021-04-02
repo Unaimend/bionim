@@ -18,7 +18,7 @@ To run test just run `nimble test` in the bionim directory
 
 
 
-Currently implemented alogrithms and data structures
+Currently implemented algorithms and data structures
 # Alignment
 Algorithms and data structures usefull in the alignment of genomic and protein based sequences.
  ## Algorithms
