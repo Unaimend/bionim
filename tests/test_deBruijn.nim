@@ -57,7 +57,6 @@ proc testDebruijn()=
       check kmers[2] == "TGT"
       check kmers[3] == "GTC"
 
-      check g.kMerMap[]
 
       check g.edgesOut.len == 4
       check g.edgesOut[0] == @[1'i64]
