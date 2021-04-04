@@ -52,7 +52,7 @@ If you have any questions or just want to contact me regarding this package. Ple
 Unaimend+bionim@gmail.com
 # Todo
 ## Parsing
- * FASTA and FASTQ parsing
+ * FASTQ parsing
 ## Alignment
  * Calculation of all possible optimal alignment for Needleman-Wunsch
  * Usage of similiarity matrices in Needleman-Wunsch
