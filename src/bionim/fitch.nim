@@ -1,15 +1,6 @@
 import deques
-import tree
-
-#[type
-  Node* = ref object
-    parent*: Node
-    children*: seq[Node]
-    score*: int
-    data*: set[char]
-    name*: string
-    length*: float
-]#
+import phylogeni/tree
+#TODO Check how alignment should work distance vs. sim based
 type Data = ref object
   data: set[char]
   score: int

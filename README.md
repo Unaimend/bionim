@@ -41,6 +41,10 @@ In this section are all packages listed on which bionim depends and which were n
 # Contributions
 If you want to contribute or think that a specific algorithm or data structure should be included in this package just create an issue.
 Also I am always happy if someone suggest code improvements and stuff like that.
+
+# Contact 
+If you have any questions or just want to contact me regarding this package. Please write to
+Unaimend+bionim@gmail.com
 # Todo
 ## Parsing
  * FASTA and FASTQ parsing
