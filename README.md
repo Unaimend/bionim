@@ -36,6 +36,7 @@ Algorithms and data structures usefull in the alignment of genomic and protein b
 
 # Documentation
 All algorithms and data structures are documented in the projects wiki.
+Documentation for `PhylogeNi` and `bio_seq` can be found on their respective git hub readme's
 
 # Credits
 In this section are all packages listed on which bionim depends and which were not created by me.
