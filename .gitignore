@@ -8,3 +8,11 @@ tests/tneedlemanWunsch
 tests/test_utils
 
 tests/test_deBruijn
+
+src/bionim/utils
+
+src/bionim/smithWaterman
+
+src/bionim/deBruijn
+
+tests/test_needlemanWunsch
