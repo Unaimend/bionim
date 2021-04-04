@@ -31,6 +31,9 @@ Algorithms and data structures usefull in the alignment of genomic and protein b
 # Assembly
  * DeBruijn Graph building
 
+# Documentation
+All algorithms and data structures are documented in the projects wiki.
+
 # Credits
 In this section are all packages listed on which bionim depends and which were not created by me.
  * [PhylogeNi](https://github.com/kerrycobb/PhylogeNi) A library for working with phylogenetic trees
