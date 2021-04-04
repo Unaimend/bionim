@@ -16,7 +16,9 @@ Installation with the nimble package manager is recommended:
 # Tests
 To run test just run `nimble test` in the bionim directory
 
-
+# File Types
+ * Fasta Alignments, those are fasta files with added constraint that all sequences must be of the same length
+ * General Fasta Files
 
 Currently implemented algorithms and data structures
 # Alignment
@@ -37,6 +39,7 @@ All algorithms and data structures are documented in the projects wiki.
 # Credits
 In this section are all packages listed on which bionim depends and which were not created by me.
  * [PhylogeNi](https://github.com/kerrycobb/PhylogeNi) A library for working with phylogenetic trees
+ * [bio_seq](https://github.com/kerrycobb/nim-dna-seq) A library for working with bioinformatic sequence types
  
 # Contributions
 If you want to contribute or think that a specific algorithm or data structure should be included in this package just create an issue.
