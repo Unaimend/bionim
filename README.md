@@ -17,8 +17,9 @@ Installation with the nimble package manager is recommended:
 To run test just run `nimble test` in the bionim directory
 
 # File Types
- * Fasta Alignments, those are fasta files with added constraint that all sequences must be of the same length
- * General Fasta Files
+ * FASTA Alignments, those are fasta files with added constraint that all sequences must be of the same length
+ * General FASTA Files
+ * Reading FastQ files
 
 Currently implemented algorithms and data structures
 # Alignment
