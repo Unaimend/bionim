@@ -31,7 +31,8 @@ Algorithms and data structures usefull in the alignment of genomic and protein b
  * Fitch's algorithm for constructing phylogenetic trees from aligned sequences.
 
 # Assembly
- * DeBruijn Graph building
+ * DeBruijn Graph building and rendering
+ * Paired-End DeBruijn grap building and rendering
 
 # Documentation
 All algorithms and data structures are documented in the projects wiki.
