@@ -5,7 +5,6 @@ author        = "Thomas Dost"
 description   = "A collection of useful algorithms and data structures for bioinformatics"
 license       = "MIT"
 srcDir        = "src"
-binDir        = "bin"
 installExt    = @["nim"]
 
 
