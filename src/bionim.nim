@@ -1,6 +1,6 @@
-import src/bionim/needlemanWunsch
-import src/smithWaterman
-import src/utils
-import src/deBruijn
+import bionim/needlemanWunsch
+import bionim/smithWaterman
+import bionim/utils
+import bionim/deBruijn
 import phylogeni
 
