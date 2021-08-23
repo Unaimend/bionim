@@ -107,6 +107,21 @@ type DeBruijnGraph* = ref object
   ## Maps StrViews to ID, this enables you to get the ID for a specific kmer
   kMerMap*: Table[StrView, ID]
 
+
+type WeightedDeBruijnGraph* = ref object
+  ## The source string, this has to stay in scope since all StrViews 
+  ## reference this string
+  source*: seq[string]
+  ## Collection of all available strings view, to get a specifig
+  ## string view just do kmers[ID]
+  kmers*: seq[StrView]
+  ## Collection of all available outgoing edges for a specific node
+  edgesOut*: Table[ID, Table[ID, int]]
+  ## Collection of all available incoming edges for a specific node
+  edgesIn*: Table[ID, Table[ID, int]]
+  ## Maps StrViews to ID, this enables you to get the ID for a specific kmer
+  kMerMap*: Table[StrView, ID]
+
 proc suffix(str: StrView): StrView=
   StrView(base: str.base, start: str.start+1, finish: str.finish)
 
@@ -130,7 +145,6 @@ proc findOrCreateKmer(graph: var DeBruijnGraph, kMer: StrView): ID=
     index = graph.kMermap.len - 1
     #for x,y in graph.kMerMap:
       #echo "  ", kMer.start..kMer.finish, ": '", kMer, "' -> ", graph.kMerMap[x], " hash=", hash(kMer)
-
     graph.edgesOut.add(@[])
     graph.edgesIn.add(@[])
     graph.kmers.add(kMer)
@@ -138,6 +152,33 @@ proc findOrCreateKmer(graph: var DeBruijnGraph, kMer: StrView): ID=
     index = graph.kMerMap[kMer]
   #echo "Index ",  index
   index
+
+
+proc findOrCreateKmerW(graph: var WeightedDeBruijnGraph, kMer: StrView): ID=
+  var index: ID
+  var pre = prefix(kMer)
+  var suff = suffix(kMer)
+  #TODO tab.mgetOrPut(key, @[]).add(val) can i do this in one lookup
+  if not (kMer in graph.kMerMap):
+    #echo "CALLED '", kMer, "'"
+    
+    #for x,y in graph.kMerMap:
+      #echo "  ", x.start..x.finish, ": '", x, "' -> ", graph.kMerMap[x], " hash=", hash(x)
+
+    #echo "adding element with hash", hash(kMer)
+    graph.kMerMap[kMer] = graph.kMerMap.len 
+    index = graph.kMermap.len - 1
+    #for x,y in graph.kMerMap:
+      #echo "  ", kMer.start..kMer.finish, ": '", kMer, "' -> ", graph.kMerMap[x], " hash=", hash(kMer)
+
+    graph.edgesOut[index] = initTable[ID, int]()
+    graph.edgesIn[index] = initTable[ID, int]()
+    graph.kmers.add(kMer)
+  else:
+    index = graph.kMerMap[kMer]
+  #echo "Index ",  index
+  index
+
 
 proc build*(sourceString: string, kmerLength: int): DeBruijnGraph =
   var t: DebruijnGraph
@@ -168,21 +209,96 @@ proc build*(reads: var seq[string], kmerLength: int): DeBruijnGraph =
                         edgesIn: @[],
                         kMerMap: initTable[StrView, ID]())
   for read in reads.mitems:
-    var length = (read.len() - (kmerLength))
+    var length = (read.len() - (kmerLength-1))
     for i in 0 ..< length:
-      let kmerL = read.toStrView(i, i+(kmerLength-1) )
-      let kmerR = read.toStrView(i+1, (i+1)+(kmerLength-1) )
-      #TODO In debug histrogramm of k-mers
-      #echo "WTF", sourceString[kmerL.start..kmerL.finish], "...", sourceString[kmerR.start..kmerR.finish]
-      echo kmerL
-      echo kmerR
-      let nodeL: ID = t.findOrCreateKmer(kmerL)
-      let nodeR: ID = t.findOrCreateKmer(kmerR)
+      let kmer = read.toStrView(i, i+(kmerLength-1) )
+      let suff = kmer.suffix
+      let pre = kmer.prefix
+     # echo kmer
+     # echo pre 
+     # echo suff
+
+      let nodeL: ID = t.findOrCreateKmer(pre)
+      let nodeR: ID = t.findOrCreateKmer(suff)
+     # echo "-----"
 
       #echo "ID",  nodeL, " and ", nodeR
       t.edgesOut[nodeL].add(nodeR)
       t.edgesIn[nodeR].add(nodeL)
   t
+
+proc buildWeighted*(reads: var seq[string], kmerLength: int): WeightedDeBruijnGraph =
+  var weighted: WeightedDeBruijnGraph 
+  new(weighted)
+  weighted = WeightedDeBruijnGraph( 
+    source: reads,
+    kmers: @[],
+    edgesOut: initTable[ID, Table[ID, int]](), 
+    edgesIn: initTable[ID, Table[ID, int]](), 
+    kMerMap: initTable[StrView, ID]())
+  
+  for read in reads.mitems:
+    var length = (read.len() - (kmerLength-1))
+    for i in 0 ..< length:
+      let kmer = read.toStrView(i, i+(kmerLength-1) )
+      let suff = kmer.suffix
+      let pre = kmer.prefix
+     # echo kmer
+     # echo pre 
+     # echo suff
+
+      let nodeL: ID = weighted.findOrCreateKmerW(pre)
+      let nodeR: ID = weighted.findOrCreateKmerW(suff)
+
+      #t.edgesOut[nodeL].add(nodeR)
+      #t.edgesIn[nodeR].add(nodeL)
+      #
+      
+      # If node L is already in our List then 
+      if nodeL in weighted.edgesOut:
+        #We still have to find out if there exists an entry for NodeR
+        if nodeR in weighted.edgesOut[nodeL]:
+          # If there is such an entry we just icrement it because we just got a kmer for ,at least, the second time
+          weighted.edgesOut[nodeL][nodeR] += 1
+        else:
+          # Else nodeR is new and because we encountered it for the first time we set its weight to 1
+          weighted.edgesOut[nodeL][nodeR]  = 1
+      else:
+        # We first have to init the Table for the nodeL entry
+        weighted.edgesOut[nodeL] = initTable[ID, int]()
+        #and then still do the check for nodeR
+        if nodeR in weighted.edgesOut[nodeL]:
+          # If there is such an entry we just icrement it because we just got a kmer for ,at least, the second time
+          weighted.edgesOut[nodeL][nodeR] += 1
+        else:
+          # Else nodeR is new and because we encountered it for the first time we set its weight to 1
+          weighted.edgesOut[nodeL][nodeR]  = 1
+
+      # If nodeR is already in our List then 
+      if nodeR in weighted.edgesIn:
+        #We still have to find out if there exists an entry for NodeR
+        if nodeL in weighted.edgesIn[nodeR]:
+          # If there is such an entry we just icrement it because we just got a kmer for ,at least, the second time
+          weighted.edgesIn[nodeR][nodeL] += 1
+        else:
+          # Else nodeR is new and because we encountered it for the first time we set its weight to 1
+          weighted.edgesIn[nodeR][nodeL] = 1
+      else:
+        # We first have to init the Table for the nodeR entry
+        weighted.edgesIn[nodeR] = initTable[ID, int]()
+        #and then still do the check for nodeR
+        if nodeL in weighted.edgesIn[nodeR]:
+          # If there is such an entry we just icrement it because we just got a kmer for ,at least, the second time
+          weighted.edgesIn[nodeR][nodeL] += 1
+        else:
+          # Else nodeR is new and because we encountered it for the first time we set its weight to 1
+          weighted.edgesIn[nodeR][nodeL] = 1
+
+  #echo weighted.edgesIn
+  #echo weighted.edgesOut
+
+     # echo "-----"
+  weighted
 
 
 proc toDot*(g: DeBruijnGraph, filename: string)=
@@ -192,6 +308,18 @@ proc toDot*(g: DeBruijnGraph, filename: string)=
   for s in 0 ..< g.edgesOut.len:
     for e in g.edgesOut[s]:
       f.writeLine(g.kmers[s], "->", g.kmers[e])
+  f.writeLine("}")
+  f.close()
+
+proc toDot*(g: WeightedDeBruijnGraph, filename: string)=
+  let f = open(filename & ".dot", fmWrite)
+  f.writeLine("digraph {")
+
+  for src_id, edges in g.edgesOut:
+    echo src_id, " ", edges
+    for dest_id, weight in edges:
+      #echo dest_id
+      f.writeLine(g.kmers[src_id], "->", g.kmers[dest_id], " ", "[label=\"" & $weight & "\"]")
   f.writeLine("}")
   f.close()
 
@@ -300,7 +428,12 @@ when isMainModule:
 
   var b: DeBruijnGraph
   new(b)
-  var t: seq[string] = @["ACTG", "TGAC"]
+  var t: seq[string] = @["AAA", "AAA", "AAB", "ABB", "BBA"]
   b = build(t, 3)
+  var w: WeightedDeBruijnGraph 
+  new(w)
+  w = buildWeighted(t, 3)
+  w.toDot("test2")
+  #discard b.toWeighted
   b.toDot("test")
 
