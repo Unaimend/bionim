@@ -122,6 +122,21 @@ type WeightedDeBruijnGraph* = ref object
   ## Maps StrViews to ID, this enables you to get the ID for a specific kmer
   kMerMap*: Table[StrView, ID]
 
+type TempDebruijnGraph* = ref object
+  ## The source string, this has to stay in scope since all StrViews 
+  ## reference this string
+  source*: seq[string]
+  ## Collection of all available strings view, to get a specifig
+  ## string view just do kmers[ID]
+  kmers*: seq[string]
+  ## Collection of all available outgoing edges for a specific node
+  edgesOut*: Table[ID, Table[ID, int]]
+  ## Collection of all available incoming edges for a specific node
+  edgesIn*: Table[ID, Table[ID, int]]
+  ## Maps StrViews to ID, this enables you to get the ID for a specific kmer
+  kMerMap*: Table[string, ID]
+
+
 proc suffix(str: StrView): StrView=
   StrView(base: str.base, start: str.start+1, finish: str.finish)
 
@@ -300,6 +315,63 @@ proc buildWeighted*(reads: var seq[string], kmerLength: int): WeightedDeBruijnGr
      # echo "-----"
   weighted
 
+proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
+  var t : TempDebruijnGraph
+  new(t)
+  t = TempDebruijnGraph( 
+    source: graph.source,
+    kmers: @[],
+    edgesOut: initTable[ID, Table[ID, int]](), 
+    edgesIn: initTable[ID, Table[ID, int]](), 
+    kMerMap: initTable[string, ID]())
+  var marked =  newSeq[bool]()
+  marked.setLen(len(graph.kMerMap))
+
+  for str,id in graph.kMerMap:
+    #TODO check that all entries are false by default
+    marked[id] = true
+    if( len(graph.edgesOut[id]) == 1 and len(graph.edgesIn[id]) == 1):
+      # We are in a path which can both ways
+      echo id,":", $str, "     MIDDLE PATH"
+      ## We now go forward until we reach a "bad" note 
+      var outgoing_edges = graph.edgesOut[id]
+      # TODO I CANT ACCES NODES BY INDEX IN A TABLE
+      # FOR LOOP HACK
+      var next_node: ID
+      for curr_id,weight in outgoing_edges:
+         next_node = curr_id
+      while graph.edgesOut[next_node].len == 1:
+        # WE ARE STILL ON A PATH
+        echo "----------------"
+        for curr_id,weight in outgoing_edges:
+          next_node = curr_id
+          echo "next node ID ", next_node, "next node KMER: ",  graph.kmers[next_node]
+      echo "------ PATH END  ---------"
+      #while(next_node 
+    elif( len(graph.edgesOut[id]) <= 1 and len(graph.edgesIn[id]) == 1):
+      # We are in a path which can only go backwards
+      echo id,":", $str, "   BACKWARDPATH"
+      while true:
+        # we either have one or zero incoming nodes
+        if len(graph.edgesIn[id]) == 0:
+          echo "O nodes behind me"
+          break
+        else:
+          echo "1 node behind me"
+          break
+    elif ( len(graph.edgesOut[id]) ==  1 and len(graph.edgesIn[id]) <= 1):
+      # We are in a path which can only go forwards
+      echo id,":", $str, "    FORWAD PATH"
+      discard
+    else:
+      echo id,":", $str, "   BAD NODE"
+      let l = t.kMerMap.len 
+      #Safe "bad" kmer with new id
+      t.kMerMap[$str] = l
+      # Safe old edges which will later be used in the translation step
+      t.edgesOut[l] = graph.edgesOut[id]
+      t.edgesIn[l] = graph.edgesIn[id]
+
 
 proc toDot*(g: DeBruijnGraph, filename: string)=
   let f = open(filename & ".dot", fmWrite)
@@ -428,12 +500,13 @@ when isMainModule:
 
   var b: DeBruijnGraph
   new(b)
-  var t: seq[string] = @["AAA", "AAA", "AAB", "ABB", "BBA"]
+  var t: seq[string] = @["AAC", "ACB", "CBB", "BBA"]
   b = build(t, 3)
   var w: WeightedDeBruijnGraph 
   new(w)
   w = buildWeighted(t, 3)
   w.toDot("test2")
+  discard w.contigsGraph
   #discard b.toWeighted
   b.toDot("test")
 
