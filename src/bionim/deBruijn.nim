@@ -96,7 +96,7 @@ proc hash*(view: StrView): Hash =
 type DeBruijnGraph* = ref object
   ## The source string, this has to stay in scope since all StrViews 
   ## reference this string
-  source*: string
+  source*: seq[string]
   ## Collection of all available strings view, to get a specifig
   ## string view just do kmers[ID]
   kmers*: seq[StrView]
@@ -107,10 +107,17 @@ type DeBruijnGraph* = ref object
   ## Maps StrViews to ID, this enables you to get the ID for a specific kmer
   kMerMap*: Table[StrView, ID]
 
+proc suffix(str: StrView): StrView=
+  StrView(base: str.base, start: str.start+1, finish: str.finish)
+
+proc prefix(str: StrView): StrView=
+  StrView(base: str.base, start: str.start, finish: str.finish-1)
 
 
 proc findOrCreateKmer(graph: var DeBruijnGraph, kMer: StrView): ID=
   var index: ID
+  var pre = prefix(kMer)
+  var suff = suffix(kMer)
   #TODO tab.mgetOrPut(key, @[]).add(val) can i do this in one lookup
   if not (kMer in graph.kMerMap):
     #echo "CALLED '", kMer, "'"
@@ -135,14 +142,14 @@ proc findOrCreateKmer(graph: var DeBruijnGraph, kMer: StrView): ID=
 proc build*(sourceString: string, kmerLength: int): DeBruijnGraph =
   var t: DebruijnGraph
   new(t)
-  t = DeBruijnGraph(source: sourceString,
+  t = DeBruijnGraph(source: @[sourceString],
                         kmers: @[], edgesOut: @[],
                         edgesIn: @[],
                         kMerMap: initTable[StrView, ID]())
   var length = (t.source.len() - (kmerLength))
   for i in 0 ..< length:
-    let kmerL = t.source.toStrView(i, i+(kmerLength-1) )
-    let kmerR = t.source.toStrView(i+1, (i+1)+(kmerLength-1) )
+    let kmerL = t.source[0].toStrView(i, i+(kmerLength-1) )
+    let kmerR = t.source[0].toStrView(i+1, (i+1)+(kmerLength-1) )
     #TODO In debug histrogramm of k-mers
     #echo "WTF", sourceString[kmerL.start..kmerL.finish], "...", sourceString[kmerR.start..kmerR.finish]
     let nodeL: ID = t.findOrCreateKmer(kmerL)
@@ -151,19 +158,33 @@ proc build*(sourceString: string, kmerLength: int): DeBruijnGraph =
     #echo "ID",  nodeL, " and ", nodeR
     t.edgesOut[nodeL].add(nodeR)
     t.edgesIn[nodeR].add(nodeL)
-
-
-  #[echo "LEN", t.kMerMap.len
-  for x,y in t.kMerMap:
-    echo  x, "' -> ", t.kMerMap[x] #, " hash=", hash(x)
-  
-  for x in t.kmers:
-    echo x.base[x.start..x.finish]
-  
-  for k in t.kmers:
-    echo k, "->", t.edgesOut[t.kmerMap[k]]
-  ]#
   t
+
+proc build*(reads: var seq[string], kmerLength: int): DeBruijnGraph =
+  var t: DebruijnGraph
+  new(t)
+  t = DeBruijnGraph(source: reads,
+                        kmers: @[], edgesOut: @[],
+                        edgesIn: @[],
+                        kMerMap: initTable[StrView, ID]())
+  for read in reads.mitems:
+    var length = (read.len() - (kmerLength))
+    for i in 0 ..< length:
+      let kmerL = read.toStrView(i, i+(kmerLength-1) )
+      let kmerR = read.toStrView(i+1, (i+1)+(kmerLength-1) )
+      #TODO In debug histrogramm of k-mers
+      #echo "WTF", sourceString[kmerL.start..kmerL.finish], "...", sourceString[kmerR.start..kmerR.finish]
+      echo kmerL
+      echo kmerR
+      let nodeL: ID = t.findOrCreateKmer(kmerL)
+      let nodeR: ID = t.findOrCreateKmer(kmerR)
+
+      #echo "ID",  nodeL, " and ", nodeR
+      t.edgesOut[nodeL].add(nodeR)
+      t.edgesIn[nodeR].add(nodeL)
+  t
+
+
 proc toDot*(g: DeBruijnGraph, filename: string)=
   let f = open(filename & ".dot", fmWrite)
   f.writeLine("digraph {")
@@ -269,12 +290,17 @@ proc toDot*(g: PairedDeBruijnGraph, filename: string)=
   f.close()
 
 when isMainModule:
-  var b: PairedDebruijnGraph
+  #[ var b: PairedDebruijnGraph
   new(b)
   var seq1 = "TAATGCCATGGGATGTT"
   let pairs = toReadPairs(seq1, 3, 1)
   echo map(pairs, suffix)
   b = build(pairs, 3)
-  b.toDot("paired")
+  b.toDot("paired")]#
 
+  var b: DeBruijnGraph
+  new(b)
+  var t: seq[string] = @["ACTG", "TGAC"]
+  b = build(t, 3)
+  b.toDot("test")
 
