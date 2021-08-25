@@ -332,6 +332,7 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
     if marked[id] == true:
       continue
     marked[id] = true
+    # DIE COND FUCKT UP
     if( len(graph.edgesOut[id]) == 1 and len(graph.edgesIn[id]) == 1):
       # We are in a path which can both ways
       echo id,":", $str, "     MIDDLE PATH"
@@ -347,6 +348,9 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
          next_node = curr_id
       echo "NODE ID BEFORE FORWARD LOOP ", next_node, "  ",graph.kmers[next_node]
       while graph.edgesOut[next_node].len <= 1:
+        #TODO CHECK THAT; EX T3 is wrong with this inplace
+        #if graph.edgesIn[next_node].len > 1:
+          #break
         # DO STUFF 
         forward_contig.add($graph.kmers[next_node])
         marked[next_node] = true
@@ -366,7 +370,7 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
       ##
       var incoming_edges = graph.edgesIn[id]
       var previous_node: ID
-      var backwards_contig: string = $graph.kmers[id]
+      var backwards_contig: string = ""
 
 
       # TODO I CANT ACCES NODES BY INDEX IN A TABLE
@@ -375,7 +379,11 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
          previous_node = curr_id
 
       echo "NODE ID BEFORE BACKWARD STEP", previous_node, "  ",graph.kmers[previous_node]
+
+      ## TODO When the previous node has more then one outgoing edge I would ignore that
       while graph.edgesIn[previous_node].len <= 1:
+        if graph.edgesOut[previous_node].len > 1:
+          break
         # DO STUFF 
         backwards_contig = ($graph.kmers[previous_node]) & backwards_contig
         marked[previous_node] = true
@@ -392,6 +400,8 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
       ##
       ##
       echo "BACKWARD CONTIG ", backwards_contig
+
+      echo "FULL CONTIG: ", backwards_contig & forward_contig
       echo "------ PATH END  ---------"
       #while(next_node 
     elif( len(graph.edgesOut[id]) <= 1 and len(graph.edgesIn[id]) == 1):
@@ -546,9 +556,11 @@ when isMainModule:
 
   var b: DeBruijnGraph
   new(b)
-  var t: seq[string] = @["AAC", "ACB", "CBB", "BBA"]
+  #var t: seq[string] = @["AAC", "ACB", "CBB", "BBA"]
   #var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT"]
-  #var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT", "BTQ", "TQA"]
+  #
+  # EAXAMPLE T3
+  var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT", "BTQ", "TQA"]
   b = build(t, 3)
   var w: WeightedDeBruijnGraph 
   new(w)
