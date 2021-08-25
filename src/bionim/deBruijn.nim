@@ -327,25 +327,71 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
   var marked =  newSeq[bool]()
   marked.setLen(len(graph.kMerMap))
 
-  for str,id in graph.kMerMap:
+  for str, id in graph.kMerMap:
     #TODO check that all entries are false by default
+    if marked[id] == true:
+      continue
     marked[id] = true
     if( len(graph.edgesOut[id]) == 1 and len(graph.edgesIn[id]) == 1):
       # We are in a path which can both ways
       echo id,":", $str, "     MIDDLE PATH"
       ## We now go forward until we reach a "bad" note 
+
+      ##################### GOING FORWARD STEP ##########################################
       var outgoing_edges = graph.edgesOut[id]
-      # TODO I CANT ACCES NODES BY INDEX IN A TABLE
-      # FOR LOOP HACK
       var next_node: ID
+      var forward_contig: string = $graph.kmers[id]
+      # TODO I CANT ACCES NODES BY INDEX IN A TABLE
+      # FOR LOOP HACK, but I know there is only one
       for curr_id,weight in outgoing_edges:
          next_node = curr_id
-      while graph.edgesOut[next_node].len == 1:
-        # WE ARE STILL ON A PATH
-        echo "----------------"
+      echo "NODE ID BEFORE FORWARD LOOP ", next_node, "  ",graph.kmers[next_node]
+      while graph.edgesOut[next_node].len <= 1:
+        # DO STUFF 
+        forward_contig.add($graph.kmers[next_node])
+        marked[next_node] = true
+        echo "CURRENT NODE  ", graph.kmers[next_node]
+        if graph.edgesOut[next_node].len == 0:
+          break
+      
+        # AND GO ON
+        outgoing_edges = graph.edgesOut[next_node]
         for curr_id,weight in outgoing_edges:
           next_node = curr_id
-          echo "next node ID ", next_node, "next node KMER: ",  graph.kmers[next_node]
+          echo "next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node]
+        # WE ARE STILL ON A PATH
+        echo "----------------"
+      echo "FOWARD CONTIG ", forward_contig
+      ##################### GOING BACK STEP ##########################################
+      ##
+      var incoming_edges = graph.edgesIn[id]
+      var previous_node: ID
+      var backwards_contig: string = $graph.kmers[id]
+
+
+      # TODO I CANT ACCES NODES BY INDEX IN A TABLE
+      # FOR LOOP HACK, but I know there is only one
+      for curr_id,weight in incoming_edges:
+         previous_node = curr_id
+
+      echo "NODE ID BEFORE BACKWARD STEP", previous_node, "  ",graph.kmers[previous_node]
+      while graph.edgesIn[previous_node].len <= 1:
+        # DO STUFF 
+        backwards_contig = ($graph.kmers[previous_node]) & backwards_contig
+        marked[previous_node] = true
+        echo "CURRENT NODE  ", graph.kmers[previous_node]
+        if graph.edgesIn[previous_node].len == 0:
+          break
+      
+        # AND GO ON
+        incoming_edges = graph.edgesIn[previous_node]
+        for curr_id,weight in incoming_edges:
+          previous_node = curr_id
+          echo "next node ID ", previous_node, " next node KMER: ",  graph.kmers[previous_node]
+      ##
+      ##
+      ##
+      echo "BACKWARD CONTIG ", backwards_contig
       echo "------ PATH END  ---------"
       #while(next_node 
     elif( len(graph.edgesOut[id]) <= 1 and len(graph.edgesIn[id]) == 1):
@@ -501,6 +547,8 @@ when isMainModule:
   var b: DeBruijnGraph
   new(b)
   var t: seq[string] = @["AAC", "ACB", "CBB", "BBA"]
+  #var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT"]
+  #var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT", "BTQ", "TQA"]
   b = build(t, 3)
   var w: WeightedDeBruijnGraph 
   new(w)
