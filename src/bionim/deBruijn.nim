@@ -315,9 +315,10 @@ proc buildWeighted*(reads: var seq[string], kmerLength: int): WeightedDeBruijnGr
      # echo "-----"
   weighted
 
-proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
+proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
   var t : TempDebruijnGraph
   new(t)
+  var contigs: seq[string] = @[]
   t = TempDebruijnGraph( 
     source: graph.source,
     kmers: @[],
@@ -346,15 +347,20 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
       # FOR LOOP HACK, but I know there is only one
       for curr_id,weight in outgoing_edges:
          next_node = curr_id
-      echo "NODE ID BEFORE FORWARD LOOP ", next_node, "  ",graph.kmers[next_node]
-      while graph.edgesOut[next_node].len <= 1:
+      echo "NODE ID BEFORE FORWARD PATH", next_node, "  ",graph.kmers[next_node]
+      while true:
         #TODO CHECK THAT; EX T3 is wrong with this inplace
         #if graph.edgesIn[next_node].len > 1:
           #break
-        # DO STUFF 
+        #DO STUFF 
+        if graph.edgesIn[next_node].len > 1:
+          break
         forward_contig.add($graph.kmers[next_node])
         marked[next_node] = true
         echo "CURRENT NODE  ", graph.kmers[next_node]
+        if graph.edgesOut[next_node].len > 1:
+          # This results in bubble sources inluded in contigs
+          break
         if graph.edgesOut[next_node].len == 0:
           break
       
@@ -402,8 +408,10 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
       echo "BACKWARD CONTIG ", backwards_contig
 
       echo "FULL CONTIG: ", backwards_contig & forward_contig
+      contigs.add(backwards_contig & forward_contig)
       echo "------ PATH END  ---------"
       #while(next_node 
+      #TODO DO I NEED BACKWARDS/FORWARD PATH DISTINCTION
     elif( len(graph.edgesOut[id]) <= 1 and len(graph.edgesIn[id]) == 1):
       # We are in a path which can only go backwards
       echo id,":", $str, "   BACKWARDPATH"
@@ -416,9 +424,37 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
           echo "1 node behind me"
           break
     elif ( len(graph.edgesOut[id]) ==  1 and len(graph.edgesIn[id]) <= 1):
-      # We are in a path which can only go forwards
-      echo id,":", $str, "    FORWAD PATH"
       discard
+      #[# We are in a path which can only go forwards
+      echo id,":", $str, "    FORWAD PATH"
+      var outgoing_edges = graph.edgesOut[id]
+      var next_node: ID
+      var forward_contig: string = $graph.kmers[id]
+      # TODO I CANT ACCES NODES BY INDEX IN A TABLE
+      # FOR LOOP HACK, but I know there is only one
+      for curr_id,weight in outgoing_edges:
+         next_node = curr_id
+      echo "NODE ID BEFORE FORWARD LOOP ", next_node, "  ",graph.kmers[next_node]
+      while graph.edgesOut[next_node].len <= 1:
+        #TODO CHECK THAT; EX T3 is wrong with this inplace
+        #if graph.edgesIn[next_node].len > 1:
+          #break
+        # DO STUFF 
+        forward_contig.add($graph.kmers[next_node])
+        marked[next_node] = true
+        echo "CURRENT NODE  ", graph.kmers[next_node]
+        if graph.edgesOut[next_node].len == 0:
+          break
+      
+        # AND GO ON
+        outgoing_edges = graph.edgesOut[next_node]
+        for curr_id,weight in outgoing_edges:
+          next_node = curr_id
+          echo "next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node]
+        # WE ARE STILL ON A PATH
+        echo "----------------"
+      echo "FOWARD CONTIG ", forward_contig
+      contigs.add(forward_contig) ]#
     else:
       echo id,":", $str, "   BAD NODE"
       let l = t.kMerMap.len 
@@ -426,8 +462,10 @@ proc contigsGraph(graph: WeightedDeBruijnGraph): TempDebruijnGraph=
       t.kMerMap[$str] = l
       # Safe old edges which will later be used in the translation step
       t.edgesOut[l] = graph.edgesOut[id]
-      t.edgesIn[l] = graph.edgesIn[id]
-
+      t.edgesIn[l] = graph.edgesIn[id] 
+  echo "-----------------CONTIGS----------"
+  echo contigs
+  return contigs
 
 proc toDot*(g: DeBruijnGraph, filename: string)=
   let f = open(filename & ".dot", fmWrite)
@@ -560,13 +598,15 @@ when isMainModule:
   #var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT"]
   #
   # EAXAMPLE T3
-  var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT", "BTQ", "TQA"]
-  b = build(t, 3)
+  #var t: seq[string] = @["AAC", "ACB", "CBB", "BBA", "BBT", "BTQ", "TQA"]
+  #b = build(t, 3)
   var w: WeightedDeBruijnGraph 
   new(w)
-  w = buildWeighted(t, 3)
+  #var BA1 = @["AABCS", "ABCSS", "ABCSS", "ABDSS"] #interessant mit kmer=4
+  var BA1 = @["TTAABCS", "TAABCSS", "AABCSSQ", "ABDSSQR"] #interessant mit kmer=4
+  w = buildWeighted(BA1, 3) 
+  echo w.kmers
   w.toDot("test2")
-  discard w.contigsGraph
+  discard w.contigs
   #discard b.toWeighted
-  b.toDot("test")
 
