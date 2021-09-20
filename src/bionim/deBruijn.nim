@@ -7,6 +7,8 @@
 import std/[tables, hashes]
 import utils
 import sequtils
+import bio_seq
+import sets
 
 ## Typedef for ID's
 ## Each node in the DeBruijn-Graph has a unique id of this type
@@ -20,6 +22,10 @@ type
     start, finish: int
     base: ptr string
 
+
+template dbg(data: untyped) = 
+  when not defined(release):
+    echo data
 
 ## Creates a string view from a give src string
 ## You have to make sure that the given src does not change is address, while a string view exists
@@ -61,6 +67,12 @@ proc `==`*(v1, v2: StrView): bool =
     if v1[i] != v2[i]:
       return false
 
+  return true
+
+proc `==`*(v1, v2: seq[StrView]): bool =
+  for i in countup(0, len(v1)):
+    if v1[i] != v2[i]:
+      return false
   return true
 
 
@@ -128,7 +140,7 @@ type TempDebruijnGraph* = ref object
   source*: seq[string]
   ## Collection of all available strings view, to get a specifig
   ## string view just do kmers[ID]
-  kmers*: seq[string]
+  contigs*: Table[string, ID]
   ## Collection of all available outgoing edges for a specific node
   edgesOut*: Table[ID, Table[ID, int]]
   ## Collection of all available incoming edges for a specific node
@@ -309,19 +321,37 @@ proc buildWeighted*(reads: var seq[string], kmerLength: int): WeightedDeBruijnGr
           # Else nodeR is new and because we encountered it for the first time we set its weight to 1
           weighted.edgesIn[nodeR][nodeL] = 1
 
-  #echo weighted.edgesIn
+  #echo weighted.edgesI
   #echo weighted.edgesOut
 
      # echo "-----"
   weighted
 
+proc toDot*(g: TempDeBruijnGraph, filename: string)=
+  let f = open(filename & ".dot", fmWrite)
+  f.writeLine("digraph {")
+  for contig,id in g.contigs:
+    f.writeline(contig, " ", "[label=\"" & $contig & "," &  $id & "\"]")
+  f.writeLine("}")
+  f.close()
+
 proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
   var t : TempDebruijnGraph
   new(t)
-  var contigs: seq[string] = @[]
+  var contigs: seq[string]
+  var contig_counter: int64 = 0
+  # Stores the end k-mer and the coresspondig contig id
+  # USAGE:
+  # To restore connection information you input a specific k-mer you then get all the ids to which the contigs coreesponding to
+  # that `end k-mer` shoukd connect
+  # Keep in mind that those are the IDs from the WeightedDBG
+  # The second truple member corresponds to the edge weight
+  var outgoing_kmers_map: Table[string, seq[(ID, int)]] 
+  var incoming_kmers_map: Table[string, seq[ID]]
+  
   t = TempDebruijnGraph( 
     source: graph.source,
-    kmers: @[],
+    contigs: initTable[string, ID](),
     edgesOut: initTable[ID, Table[ID, int]](), 
     edgesIn: initTable[ID, Table[ID, int]](), 
     kMerMap: initTable[string, ID]())
@@ -335,8 +365,10 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
     marked[id] = true
     # DIE COND FUCKT UP
     if( len(graph.edgesOut[id]) == 1 and len(graph.edgesIn[id]) == 1):
+      # BECAUSE THIS ID SHOULD NEVER AGAIN OCCUR IT SHOULD BESAFE TO USE
+      var newId: ID = id
       # We are in a path which can both ways
-      echo id,":", $str, "     MIDDLE PATH"
+      dbg (id,":", $str, "     MIDDLE PATH")
       ## We now go forward until we reach a "bad" note 
 
       ##################### GOING FORWARD STEP ##########################################
@@ -347,31 +379,44 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
       # FOR LOOP HACK, but I know there is only one
       for curr_id,weight in outgoing_edges:
          next_node = curr_id
-      echo "NODE ID BEFORE FORWARD PATH", next_node, "  ",graph.kmers[next_node]
+      dbg ("NODE ID BEFORE FORWARD PATH", next_node, "  ",graph.kmers[next_node])
       while true:
         #TODO CHECK THAT; EX T3 is wrong with this inplace
         #if graph.edgesIn[next_node].len > 1:
           #break
         #DO STUFF 
         if graph.edgesIn[next_node].len > 1:
+          dbg ("NOT ALLOWED TO INCLUDE", next_node ,"  ", graph.kmers[next_node])
           break
+        
         forward_contig.add($graph.kmers[next_node])
         marked[next_node] = true
-        echo "CURRENT NODE  ", graph.kmers[next_node]
+        dbg ("CURRENT NODE  ", graph.kmers[next_node])
+        
         if graph.edgesOut[next_node].len > 1:
           # This results in bubble sources inluded in contigs
+          dbg ("FORWARD PATH BUUBBLES UP", next_node ,"  ", graph.kmers[next_node])
+          dbg(" FORWARD CONNECTION ")
+          dbg(graph.edgesOut[next_node])
+          if not outgoing_kmers_map.contains($graph.kmers[next_node]):
+            outgoing_kmers_map[$graph.kmers[next_node]] = @[]
+          for k,v in graph.edgesOut[next_node]:
+            outgoing_kmers_map[$graph.kmers[next_node]].add((k,v))
+          dbg(" MAP")
+          dbg(outgoing_kmers_map)
           break
         if graph.edgesOut[next_node].len == 0:
+          dbg ("END OF FORWARD PATH", next_node ,"  ", graph.kmers[next_node])
           break
       
         # AND GO ON
         outgoing_edges = graph.edgesOut[next_node]
         for curr_id,weight in outgoing_edges:
           next_node = curr_id
-          echo "next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node]
+          dbg ("next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node])
         # WE ARE STILL ON A PATH
-        echo "----------------"
-      echo "FOWARD CONTIG ", forward_contig
+        dbg ("----------------")
+      dbg ("FOWARD CONTIG ", forward_contig)
       ##################### GOING BACK STEP ##########################################
       ##
       var incoming_edges = graph.edgesIn[id]
@@ -384,49 +429,59 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
       for curr_id,weight in incoming_edges:
          previous_node = curr_id
 
-      echo "NODE ID BEFORE BACKWARD STEP", previous_node, "  ",graph.kmers[previous_node]
-
+      dbg ("NODE ID BEFORE BACKWARD STEP", previous_node, "  ",graph.kmers[previous_node])
       ## TODO When the previous node has more then one outgoing edge I would ignore that
-      while graph.edgesIn[previous_node].len <= 1:
+      while true:
         if graph.edgesOut[previous_node].len > 1:
+          dbg ("END OF BACKWARDSPATH, because SPLIT", next_node ,"  ", graph.kmers[next_node])
           break
         # DO STUFF 
         backwards_contig = ($graph.kmers[previous_node]) & backwards_contig
         marked[previous_node] = true
-        echo "CURRENT NODE  ", graph.kmers[previous_node]
+        dbg ("CURRENT NODE  ", graph.kmers[previous_node])
+
+        if graph.edgesIn[previous_node].len >= 1:
+          dbg ("SINK OF BUBBLE UP", next_node ,"  ", graph.kmers[next_node])
+          break
+
         if graph.edgesIn[previous_node].len == 0:
+          dbg ("END OF BACKWARDSPATH", next_node ,"  ", graph.kmers[next_node])
           break
       
         # AND GO ON
         incoming_edges = graph.edgesIn[previous_node]
         for curr_id,weight in incoming_edges:
           previous_node = curr_id
-          echo "next node ID ", previous_node, " next node KMER: ",  graph.kmers[previous_node]
+          dbg ("next node ID ", previous_node, " next node KMER: ",  graph.kmers[previous_node])
       ##
       ##
       ##
-      echo "BACKWARD CONTIG ", backwards_contig
+      dbg ("BACKWARD CONTIG ", backwards_contig)
 
-      echo "FULL CONTIG: ", backwards_contig & forward_contig
+      dbg ("FULL CONTIG: ", backwards_contig & forward_contig)
+      #var s: Sequence = newSequence($contig_counter,  backwards_contig & forward_contig)
       contigs.add(backwards_contig & forward_contig)
-      echo "------ PATH END  ---------"
-      #while(next_node 
+      contig_counter += 1
+      t.contigs[backwards_contig & forward_contig] = newId
+      dbg ("------ PATH END  ---------")
       #TODO DO I NEED BACKWARDS/FORWARD PATH DISTINCTION
     elif( len(graph.edgesOut[id]) <= 1 and len(graph.edgesIn[id]) == 1):
       # We are in a path which can only go backwards
-      echo id,":", $str, "   BACKWARDPATH"
+      dbg (id,":", $str, "   BACKWARDPATH")
       while true:
         # we either have one or zero incoming nodes
         if len(graph.edgesIn[id]) == 0:
-          echo "O nodes behind me"
+          dbg ("O nodes behind me")
           break
         else:
-          echo "1 node behind me"
+          dbg ("1 node behind me")
           break
     elif ( len(graph.edgesOut[id]) ==  1 and len(graph.edgesIn[id]) <= 1):
-      discard
-      #[# We are in a path which can only go forwards
-      echo id,":", $str, "    FORWAD PATH"
+      dbg (id,":", $str, "     FORWRD PATH")
+      var newId: ID = id
+      ## We now go forward until we reach a "bad" note 
+
+      ##################### GOING FORWARD STEP ##########################################
       var outgoing_edges = graph.edgesOut[id]
       var next_node: ID
       var forward_contig: string = $graph.kmers[id]
@@ -434,37 +489,63 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
       # FOR LOOP HACK, but I know there is only one
       for curr_id,weight in outgoing_edges:
          next_node = curr_id
-      echo "NODE ID BEFORE FORWARD LOOP ", next_node, "  ",graph.kmers[next_node]
-      while graph.edgesOut[next_node].len <= 1:
+      dbg ("NODE ID BEFORE FORWARD PATH", next_node, "  ",graph.kmers[next_node])
+      while true:
         #TODO CHECK THAT; EX T3 is wrong with this inplace
         #if graph.edgesIn[next_node].len > 1:
           #break
-        # DO STUFF 
+        #DO STUFF 
+        if graph.edgesIn[next_node].len > 1:
+          dbg ("NOT ALLOWED TO INCLUDE", next_node ,"  ", graph.kmers[next_node])
+          break
+        
         forward_contig.add($graph.kmers[next_node])
         marked[next_node] = true
-        echo "CURRENT NODE  ", graph.kmers[next_node]
+        dbg ("CURRENT NODE  ", graph.kmers[next_node])
+        
+        if graph.edgesOut[next_node].len > 1:
+          # This results in bubble sources inluded in contigs
+          dbg ("FORWARD PATH BUUBBLES UP", next_node ,"  ", graph.kmers[next_node])
+          # This is case where we cannot go on because the next not im abigious so we store the connection information for our current
+          # contig here
+          dbg(" FORWARD CONNECTION ")
+          dbg(graph.edgesOut[next_node])
+          if not outgoing_kmers_map.contains($graph.kmers[next_node]):
+            outgoing_kmers_map[$graph.kmers[next_node]] = @[]
+          for k,v in graph.edgesOut[next_node]:
+            outgoing_kmers_map[$graph.kmers[next_node]].add((k,v))
+          dbg(" MAP")
+          dbg(outgoing_kmers_map)
+
+          break
         if graph.edgesOut[next_node].len == 0:
+          dbg ("END OF FORWARD PATH", next_node ,"  ", graph.kmers[next_node])
           break
       
         # AND GO ON
         outgoing_edges = graph.edgesOut[next_node]
         for curr_id,weight in outgoing_edges:
           next_node = curr_id
-          echo "next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node]
+          dbg ("next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node])
         # WE ARE STILL ON A PATH
-        echo "----------------"
-      echo "FOWARD CONTIG ", forward_contig
-      contigs.add(forward_contig) ]#
+        dbg("----------------")
+      dbg ("FOWARD CONTIG ", forward_contig)
+      #var s: Sequence = newSequence($contig_counter,  forward_contig)
+      contigs.add(forward_contig)
+      contig_counter += 1
+      t.contigs[forward_contig] = newId
     else:
-      echo id,":", $str, "   BAD NODE"
+      dbg (id,":", $str, "   BAD NODE")
       let l = t.kMerMap.len 
-      #Safe "bad" kmer with new id
-      t.kMerMap[$str] = l
+      #Safe "bad" kmer with old id
+      t.kMerMap[$str] = id
       # Safe old edges which will later be used in the translation step
       t.edgesOut[l] = graph.edgesOut[id]
       t.edgesIn[l] = graph.edgesIn[id] 
-  echo "-----------------CONTIGS----------"
-  echo contigs
+  dbg ("-----------------CONTIGS----------")
+  echo (contigs)
+  t.toDot("test3")
+  #contigs.writeFastaFile("contigs.fasta")
   return contigs
 
 proc toDot*(g: DeBruijnGraph, filename: string)=
@@ -480,9 +561,13 @@ proc toDot*(g: DeBruijnGraph, filename: string)=
 proc toDot*(g: WeightedDeBruijnGraph, filename: string)=
   let f = open(filename & ".dot", fmWrite)
   f.writeLine("digraph {")
+  for kmer in g.kmers:
+    var k = g.kMerMap[kmer]
+    f.writeline(kmer, " ", "[label=\"" & ($kmer) & "," &  $k & "\"]")
 
+  f.writeline("")
   for src_id, edges in g.edgesOut:
-    echo src_id, " ", edges
+    #echo src_id, " ", edges
     for dest_id, weight in edges:
       #echo dest_id
       f.writeLine(g.kmers[src_id], "->", g.kmers[dest_id], " ", "[label=\"" & $weight & "\"]")
@@ -604,9 +689,17 @@ when isMainModule:
   new(w)
   #var BA1 = @["AABCS", "ABCSS", "ABCSS", "ABDSS"] #interessant mit kmer=4
   var BA1 = @["TTAABCS", "TAABCSS", "AABCSSQ", "ABDSSQR"] #interessant mit kmer=4
+  #BA1 = @["TTAABCS", "TAABCSS", "AABCSSQ", "ABDSSQR", "BDRTT"] #interessant mit kmer=4
+
+
+  #let seq = parseFastQFile("reads/50.reads.fna.fq.gz")
+  #w = buildWeighted(BA1, 3101) 
+  #var str: seq[string] = @[]
+  #for rec in seq.sequences:
+  #  str.add($rec.nucs)
+    
   w = buildWeighted(BA1, 3) 
-  echo w.kmers
-  w.toDot("test2")
+  w.toDot("graph")
   discard w.contigs
   #discard b.toWeighted
 
