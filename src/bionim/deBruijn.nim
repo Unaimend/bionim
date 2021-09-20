@@ -374,20 +374,18 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
       ##################### GOING FORWARD STEP ##########################################
       var outgoing_edges = graph.edgesOut[id]
       var next_node: ID
-      var forward_contig: string = $graph.kmers[id]
+      var forward_contig: string = ""
+      next_node = id
       # TODO I CANT ACCES NODES BY INDEX IN A TABLE
       # FOR LOOP HACK, but I know there is only one
-      for curr_id,weight in outgoing_edges:
-         next_node = curr_id
+      #for curr_id,weight in outgoing_edges:
+      #   next_node = curr_id
       dbg ("NODE ID BEFORE FORWARD PATH", next_node, "  ",graph.kmers[next_node])
       while true:
         #TODO CHECK THAT; EX T3 is wrong with this inplace
         #if graph.edgesIn[next_node].len > 1:
           #break
         #DO STUFF 
-        if graph.edgesIn[next_node].len > 1:
-          dbg ("NOT ALLOWED TO INCLUDE", next_node ,"  ", graph.kmers[next_node])
-          break
         
         forward_contig.add($graph.kmers[next_node])
         marked[next_node] = true
@@ -415,6 +413,9 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
           next_node = curr_id
           dbg ("next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node])
         # WE ARE STILL ON A PATH
+        if graph.edgesIn[next_node].len > 1:
+          dbg ("NOT ALLOWED TO INCLUDE", next_node ,"  ", graph.kmers[next_node])
+          break
         dbg ("----------------")
       dbg ("FOWARD CONTIG ", forward_contig)
       ##################### GOING BACK STEP ##########################################
