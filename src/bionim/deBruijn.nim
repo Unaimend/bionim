@@ -380,7 +380,7 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
       # FOR LOOP HACK, but I know there is only one
       #for curr_id,weight in outgoing_edges:
       #   next_node = curr_id
-      dbg ("NODE ID BEFORE FORWARD PATH", next_node, "  ",graph.kmers[next_node])
+      dbg ("NODE ID FORWARD PATH START", next_node, "  ",graph.kmers[next_node])
       while true:
         #TODO CHECK THAT; EX T3 is wrong with this inplace
         #if graph.edgesIn[next_node].len > 1:
@@ -409,12 +409,22 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
       
         # AND GO ON
         outgoing_edges = graph.edgesOut[next_node]
+        var old_id = next_node
         for curr_id,weight in outgoing_edges:
           next_node = curr_id
           dbg ("next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node])
         # WE ARE STILL ON A PATH
         if graph.edgesIn[next_node].len > 1:
           dbg ("NOT ALLOWED TO INCLUDE", next_node ,"  ", graph.kmers[next_node])
+          ## IF WE GET "KILLED" HERE WE HAVE TO RETRIEVE THE CONNECTION INFO
+          dbg(" FORWARD CONNECTION ")
+          dbg(graph.edgesOut[old_id])
+          if not outgoing_kmers_map.contains($graph.kmers[old_id]):
+            outgoing_kmers_map[$graph.kmers[old_id]] = @[]
+          for k,v in graph.edgesOut[old_id]:
+            outgoing_kmers_map[$graph.kmers[old_id]].add((k,v))
+          dbg(" MAP")
+          dbg(outgoing_kmers_map)
           break
         dbg ("----------------")
       dbg ("FOWARD CONTIG ", forward_contig)
@@ -469,72 +479,9 @@ proc contigs*(graph: WeightedDeBruijnGraph): seq[string]=
     elif( len(graph.edgesOut[id]) <= 1 and len(graph.edgesIn[id]) == 1):
       # We are in a path which can only go backwards
       dbg (id,":", $str, "   BACKWARDPATH")
-      while true:
-        # we either have one or zero incoming nodes
-        if len(graph.edgesIn[id]) == 0:
-          dbg ("O nodes behind me")
-          break
-        else:
-          dbg ("1 node behind me")
-          break
+      continue 
     elif ( len(graph.edgesOut[id]) ==  1 and len(graph.edgesIn[id]) <= 1):
-      dbg (id,":", $str, "     FORWRD PATH")
-      var newId: ID = id
-      ## We now go forward until we reach a "bad" note 
-
-      ##################### GOING FORWARD STEP ##########################################
-      var outgoing_edges = graph.edgesOut[id]
-      var next_node: ID
-      var forward_contig: string = $graph.kmers[id]
-      # TODO I CANT ACCES NODES BY INDEX IN A TABLE
-      # FOR LOOP HACK, but I know there is only one
-      for curr_id,weight in outgoing_edges:
-         next_node = curr_id
-      dbg ("NODE ID BEFORE FORWARD PATH", next_node, "  ",graph.kmers[next_node])
-      while true:
-        #TODO CHECK THAT; EX T3 is wrong with this inplace
-        #if graph.edgesIn[next_node].len > 1:
-          #break
-        #DO STUFF 
-        if graph.edgesIn[next_node].len > 1:
-          dbg ("NOT ALLOWED TO INCLUDE", next_node ,"  ", graph.kmers[next_node])
-          break
-        
-        forward_contig.add($graph.kmers[next_node])
-        marked[next_node] = true
-        dbg ("CURRENT NODE  ", graph.kmers[next_node])
-        
-        if graph.edgesOut[next_node].len > 1:
-          # This results in bubble sources inluded in contigs
-          dbg ("FORWARD PATH BUUBBLES UP", next_node ,"  ", graph.kmers[next_node])
-          # This is case where we cannot go on because the next not im abigious so we store the connection information for our current
-          # contig here
-          dbg(" FORWARD CONNECTION ")
-          dbg(graph.edgesOut[next_node])
-          if not outgoing_kmers_map.contains($graph.kmers[next_node]):
-            outgoing_kmers_map[$graph.kmers[next_node]] = @[]
-          for k,v in graph.edgesOut[next_node]:
-            outgoing_kmers_map[$graph.kmers[next_node]].add((k,v))
-          dbg(" MAP")
-          dbg(outgoing_kmers_map)
-
-          break
-        if graph.edgesOut[next_node].len == 0:
-          dbg ("END OF FORWARD PATH", next_node ,"  ", graph.kmers[next_node])
-          break
-      
-        # AND GO ON
-        outgoing_edges = graph.edgesOut[next_node]
-        for curr_id,weight in outgoing_edges:
-          next_node = curr_id
-          dbg ("next node ID ", next_node, " next node KMER: ",  graph.kmers[next_node])
-        # WE ARE STILL ON A PATH
-        dbg("----------------")
-      dbg ("FOWARD CONTIG ", forward_contig)
-      #var s: Sequence = newSequence($contig_counter,  forward_contig)
-      contigs.add(forward_contig)
-      contig_counter += 1
-      t.contigs[forward_contig] = newId
+      continue
     else:
       dbg (id,":", $str, "   BAD NODE")
       let l = t.kMerMap.len 
