@@ -19,12 +19,12 @@ proc printGrid*(grid: Matrix, sequence1: string, sequence2: string): void =
       stdout.write fmt"{s:>4}"
     echo ""
 
+
 iterator kmers*(sequence: string, kmerLength: int): string =
   for i in 0 ..< sequence.len - (kmerLength - 1):
     yield sequence[i .. i + kmerLength - 1]
 
-
-proc countKmers*(sequence: string, kmerLength: int): CountTable[string]=
+proc countKmers*(sequence: string, kmerLength: Positive): CountTable[string]=
   var table: CountTable[string]  
   #make this an iterator
   for i in kmers(sequence, kmerLength):
@@ -37,4 +37,13 @@ proc countNucleotides*(sequence: string): CountTableRef[char]=
 
 proc prefix*(s: string): string {.inline.} = s[0 .. s.len-2]
 proc suffix*(s: string) : string {.inline.} = s[1 .. s.len-1]
+
+proc toCsv*[T](data: T, filepath: string, filename: string, filemode: FileMode=fmWrite)=
+  let f = open(filepath & filename, filemode)
+  for k,v in data:
+    f.writeline(k & "," & $v)
+  f.close()
+
+proc toCsv*[T](kv: T, filename: string, filemode: FileMode=fmWrite)=
+  toCsv(kv, "", filename, filemode)
 
