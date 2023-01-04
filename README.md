@@ -19,19 +19,6 @@ To run test just run `nimble test` in the bionim directory
 
 
 Currently implemented alogrithms and data structures
-# Alignment
-Algorithms and data structures usefull in the alignment of genomic and protein based sequences.
- ## Algorithms
- * [Needleman-Wunsch](https://en.wikipedia.org/wiki/Needleman-Wunsch_algorithm "Wikipedia page of the Needleman-Wunsch algorithm") Basic algorithm used for global alignment
- * [Smith-Waterman](https://en.wikipedia.org/wiki/Smith-Waterman_algorithm) Basic algorithm used for local alignment.
-
-# Phylogenetics
- * Fitch's algorithm for constructing phylogenetic trees from aligned sequences.
-
-# Assembly
- * DeBruijn Graph building
-
-# Credits
 In this section are all packages listed on which bionim depends and which were not created by me.
  * [PhylogeNi](https://github.com/kerrycobb/PhylogeNi) A library for working with phylogenetic trees
  
@@ -42,11 +29,3 @@ Also I am always happy if someone suggest code improvements and stuff like that.
 # Contact 
 If you have any questions or just want to contact me regarding this package. Please write to
 Unaimend+bionim@gmail.com
-# Todo
-## Parsing
- * FASTA and FASTQ parsing
-## Alignment
- * Calculation of all possible optimal alignment for Needleman-Wunsch
- * Usage of similiarity matrices in Needleman-Wunsch
-     * Customizable gap penalties for Needleman-Wunsch
-## Minimum skew problem
