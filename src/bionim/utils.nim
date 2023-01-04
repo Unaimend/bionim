@@ -2,24 +2,6 @@ import std/strformat
 import std/[tables]
 
 
-type Matrix* = ref seq[seq[int]]
-
-proc printGrid*(grid: Matrix, sequence1: string, sequence2: string): void = 
-  stdout.write "    -"
-  for i in sequence1:
-    let s: string = $i
-    #TODO Make this not static
-    stdout.write fmt"{s:>4}"
-  echo ""
-  let altSeq = "-" & sequence2
-  for i in 0 ..< grid[].len:
-    stdout.write altSeq[i]
-    for j in 0 ..< grid[i].len:
-      let s: string = $grid[i][j]
-      stdout.write fmt"{s:>4}"
-    echo ""
-
-
 iterator kmers*(sequence: string, kmerLength: int): string =
   for i in 0 ..< sequence.len - (kmerLength - 1):
     yield sequence[i .. i + kmerLength - 1]
@@ -31,19 +13,7 @@ proc countKmers*(sequence: string, kmerLength: Positive): CountTable[string]=
     table.inc(i)
   table
 
-proc countNucleotides*(sequence: string): CountTableRef[char]=
-  var table:  CountTableRef[char] = newCountTable(sequence)
-  table
-
 proc prefix*(s: string): string {.inline.} = s[0 .. s.len-2]
 proc suffix*(s: string) : string {.inline.} = s[1 .. s.len-1]
 
-proc toCsv*[T](data: T, filepath: string, filename: string, filemode: FileMode=fmWrite)=
-  let f = open(filepath & filename, filemode)
-  for k,v in data:
-    f.writeline(k & "," & $v)
-  f.close()
-
-proc toCsv*[T](kv: T, filename: string, filemode: FileMode=fmWrite)=
-  toCsv(kv, "", filename, filemode)
 
